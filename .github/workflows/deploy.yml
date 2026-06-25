@@ -4,6 +4,12 @@ permissions:
   contents: write
 
 on:
+  workflow_dispatch: # Adds the "Run workflow" button
+    inputs:
+      version:
+        description: 'Version tag (e.g., v0.1.0)'
+        required: true
+        default: 'v0.1.0'
   release:
     types: [created]
 
@@ -21,17 +27,17 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             suffix: .exe
-            asset_name: fulldump-patcher-windows.exe
+            asset_name: fullapidump-patcher-windows.exe
 
           - os: macos-15-intel
             target: x86_64-apple-darwin
             suffix: ""
-            asset_name: fulldump-patcher-mac-x86
+            asset_name: fullapidump-patcher-mac-x86
 
           - os: macos-latest
             target: aarch64-apple-darwin
             suffix: ""
-            asset_name: fulldump-patcher-mac-silicon
+            asset_name: fullapidump-patcher-mac-silicon
 
     steps:
       - name: Checkout code
@@ -52,6 +58,7 @@ jobs:
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
           files: ${{ matrix.asset_name }}

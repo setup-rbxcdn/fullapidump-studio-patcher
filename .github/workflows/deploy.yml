@@ -1,0 +1,57 @@
+name: Deploy Fulldump Patcher
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [created]
+
+env:
+  CRATE_NAME: fullapidump-studio-patcher
+
+jobs:
+  build-and-upload:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            suffix: .exe
+            asset_name: fulldump-patcher-windows.exe
+
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            suffix: ""
+            asset_name: fulldump-patcher-mac-x86
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ""
+            asset_name: fulldump-patcher-mac-silicon
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build Release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename Binary
+        shell: bash
+        run: |
+          cp "target/${{ matrix.target }}/release/${{ env.CRATE_NAME }}${{ matrix.suffix }}" "${{ matrix.asset_name }}"
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.asset_name }}

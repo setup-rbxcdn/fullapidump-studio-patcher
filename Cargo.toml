@@ -1,0 +1,16 @@
+[package]
+name = "fullapidump-studio-patcher"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+goblin = "0.9"
+iced-x86 = "1.21"
